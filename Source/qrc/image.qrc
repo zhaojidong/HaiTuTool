@@ -1,0 +1,25 @@
+<RCC>
+  <qresource prefix="icon">
+    <file>001.jfif</file>
+    <file>002.jfif</file>
+    <file>005.jfif</file>
+    <file>006.jfif</file>
+    <file>007.jfif</file>
+    <file>008.jfif</file>
+    <file>009.jfif</file>
+    <file>010.jfif</file>
+    <file>11.jfif</file>
+    <file>12.jfif</file>
+    <file>13.jfif</file>
+    <file>14.jfif</file>
+    <file>15.jfif</file>
+    <file>16.jfif</file>
+    <file>17.jfif</file>
+    <file>Start1.png</file>
+    <file>Stop1.png</file>
+  </qresource>
+    <qresource prefix="pi">
+    <file>003.jfif</file>
+    <file>004.jfif</file>
+  </qresource>
+</RCC>
