@@ -208,7 +208,7 @@ def ParseLogFile():
                 for index, value in enumerate(line):
                     if value == 'nV' or value == 'uV' or value == 'mV' or value == 'V' \
                             or value == 'pA' or value == 'nA' or value == 'uA' or value == 'mA' or value == 'A' \
-                            or value == 'M' or value == 'K':
+                            or value == 'M' or value == 'K' or value == 'MHz':
                         line[index - 1] = line[index - 1] + line[index]
                         del line[index]
                 # list max length, append 'None' to
@@ -277,6 +277,8 @@ def ParseLogFile():
             if execute_at_num == 1:
                 tree_pd = logs_pd
                 glv.log_row = tree_pd.shape[0]
+    # if execute_at_num == 2:
+    #     final_pd = final_pd.append(logs_pd, ignore_index=True)
     final_pd.to_csv(glv.final_path)
     glv.final_df = final_pd
     Chip_List = list(dict.fromkeys(Chip_Name_list))

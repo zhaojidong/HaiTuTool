@@ -191,7 +191,7 @@ class DrawWaveForm_PyChart():
         x_num = []
         glv.Chart_Success = False
         if len(self.WF_PD.index) == 1:
-            self.LabelOpts_show = True
+            self.LabelOpts_show = False
         else:
             self.LabelOpts_show = False
         for index, row in self.WF_PD.iterrows():
@@ -298,11 +298,8 @@ class DrawWaveForm_PyChart():
         box_plot = Boxplot()
         glv.char_name = dwf_gts.Chart_Html + '.html'
         box_plot.add_xaxis([''])
-        print(self.y_axis)
-        print(self.xy_dict)
         for index in range(len(self.TName)):
             L_TwoD = glv.List_OneD2TwoD(self.y_axis[index], glv.file_count)
-            print(self.TName[index], L_TwoD)
             box_plot.add_yaxis(self.TName[index], box_plot.prepare_data(L_TwoD))
 
         box_plot.set_global_opts(title_opts=opts.TitleOpts(title="Test Result"),

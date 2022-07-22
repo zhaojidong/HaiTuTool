@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Awesome-pyecharts</title>
+            <script type="text/javascript" src="https://assets.pyecharts.org/assets/echarts.min.js"></script>
+        <script type="text/javascript" src="https://assets.pyecharts.org/assets/jquery.min.js"></script>
+        <script type="text/javascript" src="https://assets.pyecharts.org/assets/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="https://assets.pyecharts.org/assets/ResizeSensor.js"></script>
+
+            <link rel="stylesheet"  href="https://assets.pyecharts.org/assets/jquery-ui.css">
+
+</head>
+<body>
+    <style>.box {  }; </style>
+        <button onclick="downloadCfg()">Save Config</button>
+    <div class="box">
+                <div id="6cf564be29ac418a9c07b6e89f37dd04" class="chart-container" style="width:900px; height:500px;"></div>
+    <script>
+        var chart_6cf564be29ac418a9c07b6e89f37dd04 = echarts.init(
+            document.getElementById('6cf564be29ac418a9c07b6e89f37dd04'), 'white', {renderer: 'canvas'});
+        var option_6cf564be29ac418a9c07b6e89f37dd04 = {
+    "animation": true,
+    "animationThreshold": 2000,
+    "animationDuration": 1000,
+    "animationEasing": "cubicOut",
+    "animationDelay": 0,
+    "animationDurationUpdate": 300,
+    "animationEasingUpdate": "cubicOut",
+    "animationDelayUpdate": 0,
+    "color": [
+        "#c23531",
+        "#2f4554",
+        "#61a0a8",
+        "#d48265",
+        "#749f83",
+        "#ca8622",
+        "#bda29a",
+        "#6e7074",
+        "#546570",
+        "#c4ccd3",
+        "#f05b72",
+        "#ef5b9c",
+        "#f47920",
+        "#905a3d",
+        "#fab27b",
+        "#2a5caa",
+        "#444693",
+        "#726930",
+        "#b2d235",
+        "#6d8346",
+        "#ac6767",
+        "#1d953f",
+        "#6950a1",
+        "#918597"
+    ],
+    "series": [
+        {
+            "type": "scatter",
+            "name": "Leakage@SYSRSTN",
+            "symbolSize": 10,
+            "data": [
+                [
+                    "##08_1",
+                    -10.637
+                ],
+                [
+                    "##08_2",
+                    12.21
+                ],
+                [
+                    "##08_3",
+                    2.69
+                ],
+                [
+                    "##10_1",
+                    6.498
+                ],
+                [
+                    "##10_2",
+                    -3.021
+                ],
+                [
+                    "##10_3",
+                    786450000000.0
+                ],
+                [
+                    "##18_1",
+                    4.594
+                ],
+                [
+                    "##18_2",
+                    786450000000.0
+                ],
+                [
+                    "##18_3",
+                    10.306
+                ],
+                [
+                    "##23_1",
+                    6.498
+                ],
+                [
+                    "##23_2",
+                    21.73
+                ],
+                [
+                    "##23_3",
+                    786450000000.0
+                ],
+                [
+                    "##24_1",
+                    -14.445
+                ],
+                [
+                    "##24_2",
+                    -3.021
+                ],
+                [
+                    "##24_3",
+                    17.922
+                ],
+                [
+                    "##26_1",
+                    17.922
+                ],
+                [
+                    "##26_2",
+                    8.402
+                ],
+                [
+                    "##26_3",
+                    786450000000.0
+                ],
+                [
+                    "##28_1",
+                    2.69
+                ],
+                [
+                    "##28_2",
+                    12.21
+                ],
+                [
+                    "##28_3",
+                    8.402
+                ],
+                [
+                    "##29_1",
+                    10.306
+                ],
+                [
+                    "##29_2",
+                    -4.925
+                ],
+                [
+                    "##29_3",
+                    19.826
+                ],
+                [
+                    "##32_1",
+                    2.69
+                ],
+                [
+                    "##32_2",
+                    19.826
+                ],
+                [
+                    "##32_3",
+                    8.402
+                ]
+            ],
+            "label": {
+                "show": false,
+                "position": "top",
+                "margin": 8
+            },
+            "rippleEffect": {
+                "show": true,
+                "brushType": "stroke",
+                "scale": 2.5,
+                "period": 4
+            }
+        }
+    ],
+    "legend": [
+        {
+            "data": [
+                "Leakage@SYSRSTN"
+            ],
+            "selected": {
+                "Leakage@SYSRSTN": true
+            },
+            "show": true,
+            "padding": 5,
+            "itemGap": 10,
+            "itemWidth": 25,
+            "itemHeight": 14
+        }
+    ],
+    "tooltip": {
+        "show": true,
+        "trigger": "item",
+        "triggerOn": "mousemove|click",
+        "axisPointer": {
+            "type": "line"
+        },
+        "showContent": true,
+        "alwaysShowContent": false,
+        "showDelay": 0,
+        "hideDelay": 100,
+        "textStyle": {
+            "fontSize": 14
+        },
+        "borderWidth": 0,
+        "padding": 5
+    },
+    "xAxis": [
+        {
+            "show": true,
+            "scale": false,
+            "nameLocation": "end",
+            "nameGap": 15,
+            "gridIndex": 0,
+            "axisLine": {
+                "show": true,
+                "onZero": false,
+                "onZeroAxisIndex": 0
+            },
+            "axisLabel": {
+                "show": true,
+                "position": "top",
+                "rotate": 30,
+                "margin": 8
+            },
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 5,
+            "minInterval": 0,
+            "splitLine": {
+                "show": false,
+                "lineStyle": {
+                    "show": true,
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            },
+            "data": [
+                "##08_1",
+                "##08_2",
+                "##08_3",
+                "##10_1",
+                "##10_2",
+                "##10_3",
+                "##18_1",
+                "##18_2",
+                "##18_3",
+                "##23_1",
+                "##23_2",
+                "##23_3",
+                "##24_1",
+                "##24_2",
+                "##24_3",
+                "##26_1",
+                "##26_2",
+                "##26_3",
+                "##28_1",
+                "##28_2",
+                "##28_3",
+                "##29_1",
+                "##29_2",
+                "##29_3",
+                "##32_1",
+                "##32_2",
+                "##32_3"
+            ]
+        }
+    ],
+    "yAxis": [
+        {
+            "name": "(Unit: nA)",
+            "show": true,
+            "scale": false,
+            "nameLocation": "center",
+            "nameGap": 40,
+            "gridIndex": 0,
+            "inverse": false,
+            "offset": 0,
+            "splitNumber": 10,
+            "minInterval": 0,
+            "splitLine": {
+                "show": false,
+                "lineStyle": {
+                    "show": true,
+                    "width": 1,
+                    "opacity": 1,
+                    "curveness": 0,
+                    "type": "solid"
+                }
+            }
+        }
+    ],
+    "title": [
+        {
+            "text": "Test Result",
+            "padding": 5,
+            "itemGap": 10
+        }
+    ]
+};
+        chart_6cf564be29ac418a9c07b6e89f37dd04.setOption(option_6cf564be29ac418a9c07b6e89f37dd04);
+    </script>
+<br/>    </div>
+    <script>
+            $('#6cf564be29ac418a9c07b6e89f37dd04').resizable().draggable().css('border-style', 'dashed').css('border-width', '1px');$("#6cf564be29ac418a9c07b6e89f37dd04>div:nth-child(1)").width("100%").height("100%");
+            new ResizeSensor(jQuery('#6cf564be29ac418a9c07b6e89f37dd04'), function() { chart_6cf564be29ac418a9c07b6e89f37dd04.resize()});
+            var charts_id = ['6cf564be29ac418a9c07b6e89f37dd04'];
+function downloadCfg () {
+    const fileName = 'chart_config.json'
+    let downLink = document.createElement('a')
+    downLink.download = fileName
+
+    let result = []
+    for(let i=0; i<charts_id.length; i++) {
+        chart = $('#'+charts_id[i])
+        result.push({
+            cid: charts_id[i],
+            width: chart.css("width"),
+            height: chart.css("height"),
+            top: chart.offset().top + "px",
+            left: chart.offset().left + "px"
+        })
+    }
+
+    let blob = new Blob([JSON.stringify(result)])
+    downLink.href = URL.createObjectURL(blob)
+    document.body.appendChild(downLink)
+    downLink.click()
+    document.body.removeChild(downLink)
+}
+    </script>
+</body>
+</html>

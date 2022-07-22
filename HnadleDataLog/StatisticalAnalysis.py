@@ -124,8 +124,8 @@ class SA:
                 value_cnt.append(len(SA_df.at[index, chip]))
                 all_val_index.append(SA_df.at[index, chip])
             all_data = list(chain.from_iterable(all_val_index))
-            all_data.append(SA_df_copy.at[index+1, str(gs.LowLimit)])
-            all_data.append(SA_df_copy.at[index+1, str(gs.HighLimit)])
+            all_data.append(SA_df.at[index, str(gs.LowLimit)])
+            all_data.append(SA_df.at[index, str(gs.HighLimit)])
             DUT_Val, error_flag, unit = glv.extractUnit7UnifyValue(all_data)
             SA_df.at[index, str(gs.LowLimit)] = DUT_Val[-2]
             SA_df.at[index, str(gs.HighLimit)] = DUT_Val[-1]
@@ -142,15 +142,16 @@ class SA:
 
     def CalData(self, data):
         index_cnt = 0
-        data_lit = []
+        data_list = []
         TName_list = []
+        glv.Math_dict = {}
         if glv.test_count > 100:
             sigma = 3
         else:
             sigma = 4
         for index, row in data.iterrows():
             Math_list = []
-            data_lit.append([])
+            data_list.append([])
             self.unit = data.at[index, str(gs.Unit)]
             usl = data.at[index, str(gs.HighLimit)]
             lsl = data.at[index, str(gs.LowLimit)]
@@ -158,14 +159,14 @@ class SA:
             TName = data.at[index, str(gs.TestName)] + '@' + data.at[index, str(gs.Signal)]
             Pass_cnt = data.at[index, str(gs.PASS_Count)]
             for dut in range(glv.file_count):
-                data_lit[index_cnt].extend(data.at[index, str(glv.File_NO[dut])])
+                data_list[index_cnt].extend(data.at[index, str(glv.File_NO[dut])])
             index_cnt += 1
             u = (usl + lsl) / 2
-            X = np.mean(data_lit).round(3)
+            X = np.mean(data_list).round(3)
             Math_list.append(X)
-            Math_list.append(np.median(data_lit).round(3))
+            Math_list.append(np.median(data_list).round(3))
             # Math_list.append(np.var(data_lit).round(3))
-            stdev = np.std(data_lit).round(3)  # stdev is σ
+            stdev = np.std(data_list).round(3)  # stdev is σ
             Math_list.append(stdev)
             # Cp = (USL - LSL) / 6σ
             Cp = round((usl - lsl) / (2*sigma*stdev), 3)

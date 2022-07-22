@@ -5,7 +5,7 @@ from FrontPanel import Ui_MainWindow
 import sys, re, linecache, os, time
 from HnadleDataLog import Main_HDL
 from ScriptFailarmy import Main_SF
-
+from HandleRAW import Main_HA
 
 class HT_Tool_UI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
@@ -43,8 +43,10 @@ if __name__ == '__main__':
     HT_Tool_Win.setFixedSize(HT_Tool_Win.width(), HT_Tool_Win.height())  # Fix the window's size
     UI_HDL = Main_HDL.HT_DataAnalysis_UI()
     UI_SF = Main_SF.HT_ScriptFailarmy_UI()
+    UI_HA = Main_HA.HT_HandleRAW_UI()
     HTUI.btn_DataLog.clicked.connect(lambda: UI_HDL.show())
     HTUI.btn_ScriptFailarmy.clicked.connect(lambda: UI_SF.show())
+    HTUI.btn_RawData.clicked.connect(lambda: UI_HA.show())
     HT_Tool_Win.show()
     sys.exit(app.exec_())
 

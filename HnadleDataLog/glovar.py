@@ -241,7 +241,6 @@ def extractUnit7UnifyValue(data_l):
         unit_class[d] = data_l[d][-1]
         digital_l[d] = data_l[d][0:(len(data_l[d])-len(unit_l[d]))]
     if len(set(unit_class)) != 1 and '0' not in unit_class:
-        print(unit_class)
         error_message = 'The units are different, so it cannot be counted!!!'
         error_flag = True
         print(error_message)
@@ -256,7 +255,6 @@ def extractUnit7UnifyValue(data_l):
     try:
         digital_l = list(map(lambda x: float(x), digital_l))  # convert string to float
     except:
-        print(digital_l)
         print('ValueError: Could not convert string to float')
         error_flag = True
         return final_res, error_flag, unit
@@ -276,6 +274,8 @@ def extractUnit7UnifyValue(data_l):
                     final_res[d] = digital_l[d] / 1e3
                 elif 'n' in unit_l[d]:
                     final_res[d] = digital_l[d] / 1e6
+                elif 'p' in unit_l[d]:
+                    final_res[d] = digital_l[d] / 1e9
                 else:
                     final_res[d] = digital_l[d] * 1e3
         elif 'u' in res:
@@ -287,6 +287,8 @@ def extractUnit7UnifyValue(data_l):
                     final_res[d] = digital_l[d] * 1e3
                 elif 'n' in unit_l[d]:
                     final_res[d] = digital_l[d] / 1e3
+                elif 'p' in unit_l[d]:
+                    final_res[d] = digital_l[d] / 1e6
                 else:
                     final_res[d] = digital_l[d] * 1e6
         elif 'n' in res:
@@ -298,8 +300,23 @@ def extractUnit7UnifyValue(data_l):
                     final_res[d] = digital_l[d] * 1e6
                 elif 'u' in unit_l[d]:
                     final_res[d] = digital_l[d] * 1e3
+                elif 'p' in unit_l[d]:
+                    final_res[d] = digital_l[d] / 1e6
                 else:
                     final_res[d] = digital_l[d] * 1e9
+        elif 'p' in res:
+            for d in range(len(data_l)):
+                unit_l[d] = ''.join(re.findall(r'[A-Za-z]', data_l[d]))
+                if res == unit_l[d]:
+                    final_res[d] = digital_l[d]
+                elif 'm' in unit_l[d]:
+                    final_res[d] = digital_l[d] * 1e9
+                elif 'u' in unit_l[d]:
+                    final_res[d] = digital_l[d] * 1e6
+                elif 'n' in unit_l[d]:
+                    final_res[d] = digital_l[d] * 1e3
+                else:
+                    final_res[d] = digital_l[d] * 1e12
         else:
             for d in range(len(data_l)):
                 unit_l[d] = ''.join(re.findall(r'[A-Za-z]', data_l[d]))
@@ -309,8 +326,11 @@ def extractUnit7UnifyValue(data_l):
                     final_res[d] = digital_l[d] / 1e3
                 elif 'u' in unit_l[d]:
                     final_res[d] = digital_l[d] / 1e6
-                else:
+                elif 'n' in unit_l[d]:
                     final_res[d] = digital_l[d] / 1e9
+                elif 'p' in unit_l[d]:
+                    final_res[d] = digital_l[d] / 1e12
+
     return final_res, error_flag, unit
 
 

@@ -109,7 +109,7 @@ class HT_DataAnalysis_UI(QMainWindow, Ui_MainWindow):
     def actionOpen(self):
         self.handleDisplay('<font color=\"#0000FF\">---- Loading the log file...  ----<font>')
         glv.selected_file_list, fileType = QFileDialog.getOpenFileNames(self, "文件选择",
-                                                                        r"C:\007\PythonProject\DataAnalysis",
+                                                                        r"Y:\DebugOnline\20220721\HT50_160_FT_22020721_log\HT50_160_FT_22020721",
                                                                         "所有文件 (*);;文本文件 (*.txt)")  # D:\\
         if len(glv.selected_file_list) == 0:
             self.handleDisplay('No object selected!')
@@ -124,7 +124,7 @@ class HT_DataAnalysis_UI(QMainWindow, Ui_MainWindow):
         glv.DUT_NO = []
 
     def create_tree(self):
-        tree_pd, final_pd= HandleLogFIle.ParseLogFile()
+        tree_pd, final_pd = HandleLogFIle.ParseLogFile()
         self.handleDisplay(str(len(glv.selected_file_list)) + ' files been selected')
         self.handleDisplay('Test count = ' + str(glv.test_count))
         self.final_pd = final_pd
@@ -397,7 +397,10 @@ class HT_DataAnalysis_UI(QMainWindow, Ui_MainWindow):
         self.progressBar.setValue(i)
 
     def tabel_show(self):
+        self.tableWidget.clearContents()
         self.tableWidget.setRowCount(len(glv.Math_dict))
+        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)  # 使表宽度自适应
+        self.tableWidget.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeToContents)
         row = 0
         for key, value in glv.Math_dict.items():
             TName = QTableWidgetItem(str(key))
