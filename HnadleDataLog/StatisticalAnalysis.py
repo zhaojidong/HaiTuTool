@@ -21,7 +21,7 @@ class SA:
         self.init()
 
     def init(self):
-        self.R_Yield()
+        # self.R_Yield()
         self.handle_EverySignalData()
 
     # calculate the yield
@@ -75,7 +75,7 @@ class SA:
         SA_df_copy = glv.marked_df.copy()
         SA_df_index_dict = {}
         SA_df_data_dict = {}
-        new_col = glv.SA_pd_col
+        new_col = glv.SA_pd_col.copy()
         for chip in glv.Chip_List:
             SA_df_index_dict[chip] = []
             SA_df_data_dict[chip] = []
@@ -121,8 +121,11 @@ class SA:
             value_cnt = []
             all_val_index = []
             for chip in glv.Chip_List:
-                value_cnt.append(len(SA_df.at[index, chip]))
-                all_val_index.append(SA_df.at[index, chip])
+                if SA_df.at[index, chip] == SA_df.at[index, chip]:
+                    value_cnt.append(len(SA_df.at[index, chip]))
+                    all_val_index.append(SA_df.at[index, chip])
+                else:
+                    value_cnt.append(0)
             all_data = list(chain.from_iterable(all_val_index))
             all_data.append(SA_df.at[index, str(gs.LowLimit)])
             all_data.append(SA_df.at[index, str(gs.HighLimit)])
@@ -139,8 +142,81 @@ class SA:
         glv.WaveForm_pd = SA_df.copy()
         self.CalData(SA_df)
 
+    def handle_EverySignalData_file2file(self):
+        global unit
+        SA_df_copy = glv.marked_df.copy()
+        SA_df_index_dict = {}
+        SA_df_data_dict = {}
+        new_col = glv.SA_pd_col.copy()
+        for chip in glv.Chip_List:
+            SA_df_index_dict[chip] = []
+            SA_df_data_dict[chip] = []
+            if chip not in new_col:
+                new_col.append(chip)
+        SA_df = pd.DataFrame(columns=new_col)
+        Chip_ID = ''
+        ChipID_List = []
+        Chip_Cnt = 0
+        SA_df_index = 0
+        SA_df_index_list = []
+        Pass_cnt = 0
+        for index, row in SA_df_copy.iterrows():
+            if SA_df_copy.at[index, str(gs.NO)] == glv.start_label:
+                Chip_ID = SA_df_copy.at[index, str(gs.CheckStatus)]
+                SA_df_index = 0
+            if SA_df_copy.at[index, str(gs.CheckStatus)] == gss.Checked:
+                SA_df.at[SA_df_index, str(gs.TestName)] = SA_df_copy.at[index, str(gs.TestName)]
+                SA_df.at[SA_df_index, str(gs.Signal)] = SA_df_copy.at[index, str(gs.Signal)]
+                SA_df.at[SA_df_index, str(gs.LowLimit)] = SA_df_copy.at[index, str(gs.LowLimit)]
+                SA_df.at[SA_df_index, str(gs.HighLimit)] = SA_df_copy.at[index, str(gs.HighLimit)]
+                SA_df.at[SA_df_index, str(gs.CheckStatus)] = SA_df_copy.at[index, str(gs.CheckStatus)]
+                for k, v in SA_df_index_dict.items():
+                    if k == Chip_ID:
+                        if SA_df_index not in v:
+                            SA_df.at[SA_df_index, Chip_ID] = []
+                SA_df_index_dict[Chip_ID].append(SA_df_index)
+                ChipID_List.append(Chip_ID)
+                SA_df_index_list.append(SA_df_index)
+                Chip_Cnt += 1
+                SA_df.at[SA_df_index, Chip_ID].append(SA_df_copy.at[index, str(gs.Measure)])
+                if SA_df_copy.at[index, str(gs.Result)] == str(gss.PASS):
+                    if SA_df.at[SA_df_index, str(gs.PASS_Count)] != SA_df.at[SA_df_index, str(gs.PASS_Count)]:
+                        # Pass_cnt = 0
+                        SA_df.at[SA_df_index, str(gs.PASS_Count)] = str(1)
+                    else:
+                        SA_df.at[SA_df_index, str(gs.PASS_Count)] = str(int(SA_df.at[SA_df_index, str(gs.PASS_Count)]) + 1)
+                        # Pass_cnt = int(SA_df.at[SA_df_index, str(gs.PASS_Count)])
+                    # Pass_cnt += 1
+                    # SA_df.at[SA_df_index, str(gs.PASS_Count)] = str(Pass_cnt)
+                SA_df_index += 1
+        for index, row in SA_df.iterrows():
+            value_cnt = []
+            all_val_index = []
+            for chip in glv.Chip_List:
+                if SA_df.at[index, chip] == SA_df.at[index, chip]:
+                    value_cnt.append(len(SA_df.at[index, chip]))
+                    all_val_index.append(SA_df.at[index, chip])
+                else:
+                    value_cnt.append(0)
+            all_data = list(chain.from_iterable(all_val_index))
+            all_data.append(SA_df.at[index, str(gs.LowLimit)])
+            all_data.append(SA_df.at[index, str(gs.HighLimit)])
+            DUT_Val, error_flag, unit = glv.extractUnit7UnifyValue(all_data)
+            SA_df.at[index, str(gs.LowLimit)] = DUT_Val[-2]
+            SA_df.at[index, str(gs.HighLimit)] = DUT_Val[-1]
+            SA_df.at[index, str(gs.Unit)] = unit
+            del DUT_Val[-2:]
+            cnt_loop = 0
+            for chip in glv.Chip_List:
+                SA_df.at[index, chip] = DUT_Val[sum(value_cnt[0:cnt_loop]):sum(value_cnt[0:cnt_loop+1])]
+                cnt_loop += 1
+        SA_df.to_csv(glv.final_path)
+        glv.WaveForm_pd = SA_df.copy()
+        self.CalData(SA_df)
 
     def CalData(self, data):
+        # CPK来源于6西格玛管理
+        # CPK值0.67，1.0，1.33，1.67分别对应的是六西格玛水平的2，3，4，5水平等级，在西格玛水平中，1、2、3、4、5分别代表能力过小，不足，尚可、充足、过剩
         index_cnt = 0
         data_list = []
         TName_list = []
@@ -161,18 +237,22 @@ class SA:
             for dut in range(glv.file_count):
                 data_list[index_cnt].extend(data.at[index, str(glv.File_NO[dut])])
             index_cnt += 1
-            u = (usl + lsl) / 2
-            X = np.mean(data_list).round(3)
-            Math_list.append(X)
+            # u = (usl + lsl) / 2
+            u = np.mean(data_list).round(3)
+            Math_list.append(u)
             Math_list.append(np.median(data_list).round(3))
             # Math_list.append(np.var(data_lit).round(3))
-            stdev = np.std(data_list).round(3)  # stdev is σ
+            stdev = np.std(data_list).round(5)  # stdev is σ
             Math_list.append(stdev)
-            # Cp = (USL - LSL) / 6σ
-            Cp = round((usl - lsl) / (2*sigma*stdev), 3)
+            if stdev == 0:
+                Cp = '-'
+                Cpk = '-'
+            else:
+                # Cp = (USL - LSL) / 6σ
+                Cp = round((usl - lsl) / (2*sigma*stdev), 3)
+                # Cpk = T/6σ- |M-μ|/3σ
+                Cpk = round(min((usl - u) / (sigma * stdev), (u - lsl) / (sigma * stdev)), 3)
             Math_list.append(Cp)
-            # Cpk = T/6σ- |M-μ|/3σ
-            Cpk = round(min(usl-u, u-lsl)/(sigma*stdev), 3)
             Math_list.append(Cpk)
             # Yeild = Pass_cnt / glv.test_cnt
             Yeild = round(100*(int(Pass_cnt)/int(glv.test_count)), 3)

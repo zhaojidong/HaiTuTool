@@ -2,8 +2,8 @@ import openpyxl, time, cv2
 import HandleRAW.glovar as glovar
 import numpy as np
 output_file_path = '.\Out'
-rawPath = r'Y:\123\rawdata_3.raw'
-imgSize = (2480, 2072)   #
+rawPath = r'D:\Python\Project\Ref_Data\700.raw'
+imgSize = (2064, 2672)   #
 from PIL import Image as im
 
 def creat_report_excel():
@@ -23,10 +23,10 @@ def creat_report_excel():
     print('Finish report initial')
     return wb,
 
-def transfer_16bit_to_8bit():
+def transfer_16bit_to_8bit(fname):
     # image_16bit = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
-    image_16bit = np.fromfile(rawPath, dtype='>u2')  # >u2:big endian, Unicode String 2 bytes
-    image_16bit = np.reshape(image_16bit[0:], imgSize)  # 32
+    image_16bit = np.fromfile(fname, dtype='>u2')  # >u2:big endian, Unicode String 2 bytes
+    image_16bit = np.reshape(image_16bit[32:], imgSize)  # 32
     min_16bit = np.min(image_16bit)
     max_16bit = np.max(image_16bit)
     # image_8bit = np.array(np.rint((255.0 * (image_16bit - min_16bit)) / float(max_16bit - min_16bit)), dtype=np.uint8)
@@ -91,7 +91,7 @@ def mouse(event, x, y, flags, param):
     # print(str(glovar.display_file))
     # print(g_window_wh[1])
     # g_image_original = cv2.imread(str(glovar.display_file))  # 原始图片，建议大于窗口宽高（800*600）
-    g_image_original, g_image_original_16bit = transfer_16bit_to_8bit()
+    g_image_original, g_image_original_16bit = transfer_16bit_to_8bit(rawPath)
     g_image_zoom = g_image_original.copy()  # 缩放后的图片
     g_image_show = g_image_original[g_location_win[1]:g_location_win[1] + g_window_wh[1],
                    g_location_win[0]:g_location_win[0] + g_window_wh[0]]  # 实际显示的图片

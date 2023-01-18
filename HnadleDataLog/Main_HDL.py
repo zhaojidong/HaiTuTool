@@ -67,10 +67,17 @@ class HT_DataAnalysis_UI(QMainWindow, Ui_MainWindow):
         self.setWindowTitle('数据分析工具')
         self.setFixedSize(self.width(), self.height())
         # self.progressBar.value(0)
-        glv.Current_Path = os.getcwd()
-        glv.Current_Path = r'C:\007\PythonProject\HaiTuTool\HnadleDataLog\html'
+        glv.Current_Path = os.path.dirname(os.path.realpath(__file__))
+        p_image, p_file, p_html, p_excel = glv.creatFolder(glv.Current_Path, 'out', 'image', 'file', 'html', 'excel')
+        glv.P_image = p_image
+        glv.P_file = p_file
+        glv.P_html = p_html
+        glv.P_excel = p_excel
+        glv.final_path = p_file + '\\' + 'final.txt'
         # myWindow.setWindowIcon(QIcon(r'D:\Python\MyLogo\log_snail.jpeg'))
         self.init_show()
+        if glv.Log_Wafer:
+            self.gen_waferMap()
         self.button_handler()
         self.initChart()
 
@@ -91,10 +98,12 @@ class HT_DataAnalysis_UI(QMainWindow, Ui_MainWindow):
                            </html>''')
         self.CH.setGeometry(0, 0, 1200, 1000)
 
+
     def button_handler(self):
         self.btn_yeild.clicked.connect(lambda: self.handle_checked_item())
         self.actionOpen.triggered.connect(lambda: HT_DataAnalysis_UI.actionOpen(self))
         self.btn_abort.clicked.connect(lambda: self.abortProcess())
+        self.tabel_WaferMap.itemClicked.connect(lambda: self.show_data)
 
     def abortProcess(self):
         try:
@@ -117,6 +126,7 @@ class HT_DataAnalysis_UI(QMainWindow, Ui_MainWindow):
             return
         self.error = False
         self.init_glv()
+        self.choose_LogMode()
         self.tree.clear()
         self.create_tree()
 
@@ -135,14 +145,14 @@ class HT_DataAnalysis_UI(QMainWindow, Ui_MainWindow):
         # set tree's column
         self.tree.setColumnCount(3)
         # set the title
-        self.tree.setHeaderLabels(['Key', 'Pass', 'Fail'])
+        self.tree.setHeaderLabels(['Test_Item', 'Pass', 'Fail'])
         self.tree.setColumnWidth(0, 250)
         self.tree.setColumnWidth(1, 40)
         self.tree.setColumnWidth(2, 40)
         self.root = QTreeWidgetItem(self.tree)
         self.root.setText(0, 'Test Items')
         self.root.setCheckState(0, Qt.Unchecked)
-        loop_count = 1
+        loop_count = 0  # 1
         while loop_count < (self.first_pd_rows - 1):
             TestName = tree_pd.iloc[loop_count].at[str(gs.TestName)]  # at['TestName']
             if TestName == glv.end_label:
@@ -160,6 +170,8 @@ class HT_DataAnalysis_UI(QMainWindow, Ui_MainWindow):
                 child1.addChild(child2)
                 child2.setCheckState(0, Qt.Unchecked)
                 loop_count = loop_count + 1
+                if loop_count == (self.first_pd_rows - 1):
+                    break
         # 加载根节点的所有属性与子控件
         self.tree.addTopLevelItem(self.root)
         # 节点全部展开
@@ -265,7 +277,6 @@ class HT_DataAnalysis_UI(QMainWindow, Ui_MainWindow):
     def handle_checked_item(self):
         # self.progressBar.setRange(100)
         self.handleDisplay('<font color=\"#0000FF\">---- Export to excel...... ----<font>')
-        self.ShowChartInfo()
         if self.error:
             self.handleDisplay('No item was selected!!!')
             self.progressBar.setValue(100)
@@ -419,10 +430,53 @@ class HT_DataAnalysis_UI(QMainWindow, Ui_MainWindow):
             self.tableWidget.setItem(row, 6, Yeild)
             row += 1
 
-    def ShowChartInfo(self):
-        choose_chip2show = self.le_chartinfo.text()
-        print(choose_chip2show)
-        ttt = 0
+    def gen_waferMap(self):
+        x = 8
+        y = 13
+        self.tabel_WaferMap.setColumnCount(x)
+        self.tabel_WaferMap.setRowCount(y)
+        x_title = list(range(1, x, 1))
+        x_title = [str(x) for x in x_title]
+        self.tabel_WaferMap.setHorizontalHeaderLabels(x_title)  # 设置表头
+        self.tabel_WaferMap.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.tabel_WaferMap.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.tabel_WaferMap.verticalHeader().setDisabled(True)  # 不让用户改行高
+        self.tabel_WaferMap.horizontalHeader().setDisabled(True)  # 不让用户改列宽
+
+    def choose_LogMode(self):
+        if self.comboBox_logMode.currentText() == gts.Log_CP:
+            glv.Log_FT = False
+            glv.Log_CP = True
+            glv.Log_Wafer = False
+            glv.Log_Debug = False
+        if self.comboBox_logMode.currentText() == gts.Log_FT:
+            glv.Log_FT = True
+            glv.Log_CP = False
+            glv.Log_Wafer = False
+            glv.Log_Debug = False
+        if self.comboBox_logMode.currentText() == gts.Log_Debug:
+            glv.Log_FT = False
+            glv.Log_CP = False
+            glv.Log_Wafer = False
+            glv.Log_Debug = True
+        if self.comboBox_logMode.currentText() == gts.Log_Wafer:
+            glv.Log_FT = False
+            glv.Log_CP = False
+            glv.Log_Wafer = True
+            glv.Log_Debug = False
+
+    def show_data(self):
+        print('1223333')
+        # print('row = ', Item.row())
+        # # 如果单元格对象为空
+        # if Item is None:
+        #     return
+        # else:
+        #     row   = Item.row()  # 获取行数
+        #     col = Item.column()  # 获取列数 注意是column而不是col哦
+        #     # 输出测试
+        #     print('row = ', row)
+        #     print('col =', col)
 
 # class TaskThread(QtCore.QThread):
 #     notifyProgress = QtCore.pyqtSignal(int)

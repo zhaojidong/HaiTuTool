@@ -1,7 +1,7 @@
 """
 Create all excel or other files
 """
-import openpyxl, time
+import openpyxl, time, re
 import pandas as pd
 import HnadleDataLog.glovar as glv
 
@@ -107,8 +107,12 @@ def file_create(f_path, f_name, f_type):
 # All file merge to one file
 def MergeFile(file_list):
     file_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
-    merge_file = r'C:\007\PythonProject\Ref_Data\DataAnalysis\Out' + '\\' + 'Merge_' + str(file_time) + '.txt'
+    # merge_file = r'D:\Python\Project\Ref_Data\out\text' + '\\' + 'LogMergeFile.txt'# + str(file_time) + '.txt'
+    merge_file = glv.P_file + '\\' + 'LogMergeFile.txt'
     merge_file_fp = open(merge_file, 'w+')
+    loop_cnt = 0
+    append_name = ''
+    finder = False
     for f_num in range(len(file_list)):
         with open(file_list[f_num], 'r+') as r_fp:
             find_file_name = False
@@ -121,7 +125,23 @@ def MergeFile(file_list):
                     x = gp.file_name + ' ' + file_list[f_num] + '\r\n' + x
                 if find_file_name and gp.EndStr in x:
                     find_file_name = False
+                # merge_file_fp.write(x)
+####
+                if re.search(glv.pat_Item_PASS, x) or re.search(glv.pat_Item_FAIL, x):
+                    tree_list = x.split()
+                    if 'IDD_LvdsOff' in x or 'IDD_OutlogicOff' in x  or 'IDD_ADCLOG_HSCAN_OFF' in x or 'IDD_ADC_OFF' in x \
+                            or 'IDD_CSL_OFF' in x or 'IDD_VSCAN_OFF' in x or 'IDD_POWER_OFF' in x or 'IDD_VIREF_OFF' in x:
+                        loop_cnt = 0
+                        append_name = str(x.split()[4].split('.')[1].replace('IDD_', ''))
+                        finder = True
+                    if 0 < loop_cnt < 9 and finder:
+                        x = x.replace(tree_list[3], tree_list[3] + '_' + append_name)
+                    if loop_cnt == 9:
+                        loop_cnt = 0
+                        finder = False
+                    loop_cnt += 1
                 merge_file_fp.write(x)
+####
         r_fp.close()
         merge_file_fp.write('\r\n')
     merge_file_fp.close()

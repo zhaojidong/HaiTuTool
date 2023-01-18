@@ -165,12 +165,14 @@ class DrawWaveForm(FigureCanvasQTAgg):
 
 class DrawWaveForm_PyChart():
     def __init__(self):
+        self.xy_dict_save = None
+        self.TName_save = None
+        self.showChart = None
         self.x_axis = None
         self.HighLimit = None
         self.LowLimit = None
         self.LabelOpts_show = False
         self.DUT_num_l = None
-        self.WF_PD = None
         self.TName = []
         self.xy_dict = None
         self.y_axis = []
@@ -178,6 +180,8 @@ class DrawWaveForm_PyChart():
 
     def init(self):
         self.WF_PD = glv.WaveForm_pd.copy()
+        if len(list(set(list(self.WF_PD[dwf_gs.TestName])))) > 1:  # do not show the chart if TName bigger than 1
+            self.showChart = False
         glv.Html_Path = glv.Current_Path + '\\' #+ 'html\\'
         data_y = 0
         x_axis_count = 0
@@ -187,6 +191,7 @@ class DrawWaveForm_PyChart():
         self.x_axis = []
         self.unit = None
         self.TName = []
+        self.TName_save = []
         index_cnt = 0
         x_num = []
         glv.Chart_Success = False
@@ -201,18 +206,28 @@ class DrawWaveForm_PyChart():
             self.HighLimit = self.WF_PD.at[index, str(dwf_gs.HighLimit)]
             self.TName.append(self.WF_PD.at[index, str(dwf_gs.TestName)] + '@' + self.WF_PD.at[
                 index, str(dwf_gs.Signal)])
+            self.TName_save.append(self.WF_PD.at[index, str(dwf_gs.TestName)] + '@' + self.WF_PD.at[
+                index, str(dwf_gs.Signal)] + '&' + self.WF_PD.at[index, str(dwf_gs.Unit)])
             self.unit = self.WF_PD.at[index, str(dwf_gs.Unit)]
-            for dut in range(glv.file_count):
-                data_y += 1
-                if len(self.WF_PD.at[index, str(glv.File_NO[dut])]) != 0:
-                    for no in range(len(self.WF_PD.at[index, str(glv.File_NO[dut])])):
-                        x_num.append(str(glv.File_NO[dut]) + '_' + str(no+1))
-                self.DUT_num_l.append(str(glv.File_NO[dut]))
-                self.y_axis[index_cnt].extend(self.WF_PD.at[index, str(glv.File_NO[dut])])
+            if glv.Log_Debug:
+                for dut in range(glv.file_count):
+                    data_y += 1
+                    if len(self.WF_PD.at[index, str(glv.File_NO[dut])]) != 0:
+                        for no in range(len(self.WF_PD.at[index, str(glv.File_NO[dut])])):
+                            x_num.append(str(glv.File_NO[dut]) + '_' + str(no+1))
+                    self.DUT_num_l.append(str(glv.File_NO[dut]))
+                    self.y_axis[index_cnt].extend(self.WF_PD.at[index, str(glv.File_NO[dut])])
+            if glv.Log_Wafer:
+                for dut in range(len(glv.Chip_List)):
+                    self.y_axis[index_cnt].extend(self.WF_PD.at[index, str(glv.Chip_List[dut])])
             index_cnt += 1
-        self.x_axis = list(set(x_num))
-        self.x_axis.sort(key=x_num.index)
+        if glv.Log_Debug:
+            self.x_axis = list(set(x_num))
+            self.x_axis.sort(key=x_num.index)
+        if glv.Log_Wafer:
+            self.x_axis = glv.Chip_List
         self.xy_dict = dict(zip(self.TName, self.y_axis))
+        self.xy_dict_save = dict(zip(self.TName_save, self.y_axis))
 
     def CurveGraph(self):
         box_dict = {'t1_qaz': [1, 2, 3], 't2_wsx': [4, 5, 6]}
@@ -277,11 +292,11 @@ class DrawWaveForm_PyChart():
         if glv.SaveOpt == dwf_gts.none:
             pass
         elif glv.SaveOpt == dwf_gts.Combination:
-            save_path = r'C:\007\PythonProject\Ref_Data\10125AE\OutputImage' + '\\' + self.TName[0] + '.png'
+            save_path = glv.P_image + '\\' + self.TName[0] + '.png'
             make_snapshot(snapshot, page.render(), save_path)
         elif glv.SaveOpt == dwf_gts.Separation:
-            Sub_Pro_1 = multiprocessing.Process(target=ScatterProcess, args=(glv.Html_Path, self.xy_dict, self.x_axis,
-                                                rotate_cnt, yaxis_name, ))
+            Sub_Pro_1 = multiprocessing.Process(target=ScatterProcess, args=(glv.P_html, glv.P_image,
+                                                self.xy_dict_save, self.x_axis, rotate_cnt, self.WF_PD, ))
             glv.Sub_Process = Sub_Pro_1
             # glv.Sub_Process_list.append(Sub_Pro_1)
             glv.Process_PPID = os.getpid()
@@ -291,7 +306,25 @@ class DrawWaveForm_PyChart():
             Sub_Pro_1.start()
 
     def Histogram(self):
-        pass
+
+        import numpy as np
+        import matplotlib.pyplot as plt
+        print(self.y_axis[0])
+        x = np.arange(-4.5,4.5,0.1)
+        x = np.array(self.y_axis[0])
+        print(x)
+        def f(x):
+            return (np.e) ** (-x ** 2 / 2) / (2 * np.pi) ** 0.5
+
+        samples = np.random.normal(0, 1, size=1000000)
+        bins = len(self.y_axis[0])
+        print(bins)
+
+        plt.plot(x, f(x), label='f(x)')
+        plt.hist(samples, bins=bins, density=True, histtype='stepfilled', label='bins=%s' % bins)
+        plt.legend(loc='upper left')
+        plt.show()
+
 
     def BoxPlots(self):
         page = Page(layout=Page.DraggablePageLayout)
@@ -315,24 +348,89 @@ class DrawWaveForm_PyChart():
         glv.Chart_Success = True
 
 
-def ScatterProcess(HtmlPath, xy_dict, x_axis_list, rotate_cnt, yaxis_name):
+def ScatterProcess_b(HtmlPath, ImagePath,  xy_dict, x_axis_list, rotate_cnt, yaxis_name):
     xy_dict = xy_dict
     x_axis = x_axis_list
     for key, value in xy_dict.items():
         page = Page(layout=Page.DraggablePageLayout)
         scatter = Scatter()
         scatter.add_xaxis(x_axis[0:len(x_axis)])
-        save_name = HtmlPath + key + '.html'
-        save_path = r'C:\007\PythonProject\Ref_Data\10125AE\OutputImage' + '\\' + key + '.png'
+        save_html = HtmlPath + '\\' + key + '.html'
+        save_image = ImagePath + '\\' + key + '.png'
         scatter.add_yaxis(key, value)
         scatter.set_series_opts(label_opts=opts.LabelOpts(is_show=False))
-        scatter.set_global_opts(title_opts=opts.TitleOpts(title="Test Result"),
+        scatter.set_global_opts(title_opts=opts.TitleOpts(title=""),
                                 xaxis_opts=opts.AxisOpts(axisline_opts=opts.AxisLineOpts(is_on_zero=False),
                                                          axislabel_opts=opts.LabelOpts(rotate=rotate_cnt)),
                                 yaxis_opts=opts.AxisOpts(split_number=10,
                                                          name=yaxis_name, name_location='center', name_gap=40)
                                 )
         page.add(scatter)
-        page.render(save_name)
-        # os.system(save_name)
-        make_snapshot(snapshot, page.render(), save_path)
+        page.render(save_html)
+        # os.system(save_html)
+        make_snapshot(snapshot, page.render(), save_image)
+
+def ScatterProcess(HtmlPath, ImagePath,  xy_dict, x_axis_list, rotate_cnt, WF_PD):
+    xy_dict = xy_dict
+    x_axis = x_axis_list
+    TName_val = []
+    loop_cnt = 0
+    next_TN = False
+    print(ImagePath)
+    for key, value in xy_dict.items():
+        page = Page(layout=Page.DraggablePageLayout)
+        scatter_i = Scatter()
+        scatter_i.add_xaxis(x_axis[0:len(x_axis)])
+        key_info = str(key).split('&')
+        key = key_info[0]
+        yaxis_unit = '(Unit: ' + key_info[1] + ')'
+        save_image = ImagePath + '\\' + key + '.png'
+        scatter_i.add_yaxis(key, value)
+        scatter_i.set_series_opts(label_opts=opts.LabelOpts(is_show=False))
+        scatter_i.set_global_opts(title_opts=opts.TitleOpts(title=""),
+                                  xaxis_opts=opts.AxisOpts(axisline_opts=opts.AxisLineOpts(is_on_zero=False),
+                                                           axislabel_opts=opts.LabelOpts(rotate=rotate_cnt)),
+                                  yaxis_opts=opts.AxisOpts(split_number=10,
+                                                           name=yaxis_unit, name_location='center', name_gap=40)
+                                  )
+        page.add(scatter_i)
+        # os.system(save_html)
+        make_snapshot(snapshot, page.render(), save_image)
+    # for key, value in xy_dict.items():
+    #     page = Page(layout=Page.DraggablePageLayout)
+    #     scatter_h = Scatter()
+    #     scatter_h.add_xaxis(x_axis[0:len(x_axis)])
+    #     print(str(key).split('@')[0])
+    #     if loop_cnt == 0:
+    #         TName = str(key).split('@')[0]
+    #         TName_val = value
+    #         loop_cnt = 1
+    #     else:
+    #         if TName == str(key).split('@')[0]:
+    #             TName_val.extend(value)
+    #         else:
+    #             next_TN = True
+    #     if next_TN:
+    #         save_html = HtmlPath + '\\' + TName + '.html'
+    #         scatter_h.add_yaxis(TName, TName_val)
+    #         scatter_h.set_series_opts(label_opts=opts.LabelOpts(is_show=False))
+    #         scatter_h.set_global_opts(title_opts=opts.TitleOpts(title=""),
+    #                                 xaxis_opts=opts.AxisOpts(axisline_opts=opts.AxisLineOpts(is_on_zero=False),
+    #                                                          axislabel_opts=opts.LabelOpts(rotate=rotate_cnt)),
+    #                                 yaxis_opts=opts.AxisOpts(split_number=10,
+    #                                                          name=yaxis_name, name_location='center', name_gap=40)
+    #                                 )
+    #         page.add(scatter_h)
+    #         page.render(save_html)
+    #         loop_cnt = 0
+    #         TName_val = []
+    #         next_TN = False
+
+    # for index, row in WF_PD.iterrows():
+    #     if index == 0:
+    #         TName = WF_PD.at[index, str(dwf_gs.TestName)]
+    #         TName_val = WF_PD.at[index, str(dwf_gs.Measure)]
+    #     else:
+    #         if TName == WF_PD.at[index, str(dwf_gs.TestName)]:
+    #             TName_val.append(WF_PD.at[index, str(dwf_gs.Measure)])
+    # ttt = 0

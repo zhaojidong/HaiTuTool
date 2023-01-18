@@ -1,26 +1,59 @@
-import os
-from multiprocessing import Process
-import time
-def foo(x):
-    print('Process start')
-    time.sleep(x)
-    print('Process end')
+#
+# 本文以某一批产品的长度为数据集
+# 在此数据集的基础上绘制直方图和正态分布曲线
+#
+
+import pandas as pd  # pandas是一个强大的分析结构化数据的工具集
+import numpy as np  # numpy是Python中科学计算的核心库
+import matplotlib.pyplot as plt  # matplotlib数据可视化神器
+
+
+# 正态分布的概率密度函数
+#   x      数据集中的某一具体测量值
+#   mu     数据集的平均值，反映测量值分布的集中趋势
+#   sigma  数据集的标准差，反映测量值分布的分散程度
+def normfun(x, mu, sigma):
+    pdf = np.exp(-((x - mu) ** 2) / (2 * sigma ** 2)) / (sigma * np.sqrt(2 * np.pi))
+    return pdf
+
 
 if __name__ == '__main__':
-    p1 = Process(target=foo, args=(1,)) #进程传参的固定模式
-    print(os.getpid())
-    p2 = Process(target=foo, args=(2,))
-    print(os.getpid())
-    p3 = Process(target=foo, args=(3,))
-    print(os.getpid())
-    start = time.time()
-    p1.start()
-    p2.start()
-    p3.start()
-    p1.join()
-    p2.join()
-    p3.join()
-    end = time.time()
-    print(end-start)
-    print('主进程')
+    # ttt = [-386.844, -389.087, -383.849, -391.203, -389.582, -384.966, -391.84, -391.669, -386.601, -384.6, -388.764, -390.033, -389.045, -385.555, -390.879, -389.501, -387.385, -389.515, -387.281,  -384.31, -386.577, -388.954, -378.51]  # -230.895,
+    # # ttt = [2539,2536,2534,2542,2545,2538,2539,2542,2547,2535,
+    # #        2541,2543,2544,2548,2545,2543,2546,2540,2551,2545,
+    # #        2540,2539,2541,2536,2538,2531,2556,2543,2540,2538,
+    # #        2537,2544,2533,2546,2540,2549,2534,2542,2550,2537,
+    # #        2535,2532,2545,2540,2527,2543,2554,2539,2545,2543,
+    # #        2540,2543,2544,2541,2553,2537,2538,2524,2544,2540,
+    # #        2536,2542,2539,2546,2538,2535,2531,2534,2540,2536,
+    # #        2541,2532,2538,2542,2540,2533,2537,2541,2549,2535,
+    # #        2547,2534,2530,2539,2536,2546,2529,2540,2537,2533,
+    # #        2540,2535,2541,2537,2547,2539,2542,2547,2538,2539]
+    # data = np.array(ttt)
+    # print(data)
+    # # data = pd.read_csv(r'D:\Python\Project\Ref_Data\length.csv')  # 载入数据文件
+    # mean = data.mean()  # 获得数据集的平均值
+    # std = data.std()  # 获得数据集的标准差
+    # min_v = np.min(data)
+    # max_v = np.max(data)
+    # print(mean, std, min_v, max_v)
+    # # 设定X轴：前两个数字是X轴的起止范围，第三个数字表示步长
+    # # 步长设定得越小，画出来的正态分布曲线越平滑
+    # x = np.arange(min_v, max_v, 0.01)
+    # # 设定Y轴，载入刚才定义的正态分布函数
+    # y = normfun(x, mean, std)
+    # # 绘制数据集的正态分布曲线
+    # plt.plot(x, y)
+    #
+    # # 绘制数据集的直方图
+    # plt.hist(data, bins=10, rwidth=1, density=True)
+    # plt.title('Length distribution')
+    # plt.xlabel('Length')
+    # plt.ylabel('Probability')
+    #
+    # # 输出正态分布曲线和直方图
+    # plt.show()
 
+    data = [1,2]
+    print(np.mean(data))
+    print(np.std(data))

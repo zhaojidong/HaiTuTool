@@ -20,8 +20,13 @@ import HandleRAW.glovar as glovar
 import HandleRAW.handle_data as handle_data
 import multiprocessing
 from multiprocessing import Process
+import HandleRAW.AnalyseRawData as ARD
+import HandleRAW.Txt2Raw as T2R
+import HandleRAW.Txt2Bin as T2B
+import HandleRAW.Txt2Check as T2C
+import HandleRAW.Bin2Check as B2C
 
-try_raw_path = r'D:\Python\Project\Ref_Data\RAWtestseria-0\20220427_000800_218397_0.raw'
+gip = glovar.row_info()
 folder_name_string_pattern1 = '0x'
 folder_name_string_pattern2 = '0X'
 filename_extension = '.raw'
@@ -80,20 +85,34 @@ class HT_HandleRAW_UI(QMainWindow, Ui_MainWindow):
         self.buttonORaction()
         self.handleDisplay('This PC has ' + str(CPU_COUNT) + ' CPUs')
 
+        glovar.Current_Path = os.path.dirname(os.path.realpath(__file__))
+        p_image, p_file, p_html, p_excel = glovar.creatFolder(glovar.Current_Path, 'out', 'image', 'file', 'html', 'excel')
+        glovar.P_image = p_image
+        glovar.P_file = p_file
+        glovar.P_html = p_html
+        glovar.P_excel = p_excel
+        self.raw_info = glovar.P_file + '\\' + 'raw_info.txt'
+        self.display_configData()
     # All Button Event
+
     def buttonORaction(self):
         self.pushButton.clicked.connect(lambda: HT_HandleRAW_UI.openFileEvent(self))
         # self.actionOpen.triggered.connect(lambda: HandleRAW_UI.openFileEvent(self))
         self.plot_wave.clicked.connect(lambda: HT_HandleRAW_UI.ttt_plot_wave(self))
         self.btn_display_raw.clicked.connect(lambda: HT_HandleRAW_UI.display_raw(self))
+        self.btn_config.clicked.connect(lambda: HT_HandleRAW_UI.save_config(self))
+        self.btn_Txt2Raw.clicked.connect(lambda: HT_HandleRAW_UI.CP_Txt2Raw(self))
+        self.btn_Txt2Bin.clicked.connect(lambda: HT_HandleRAW_UI.CP_Txt2Bin(self))
+        self.btn_CheckPixel.clicked.connect(lambda: HT_HandleRAW_UI.CP_2Check(self))
+        self.btn_Bin2Check.clicked.connect(lambda: HT_HandleRAW_UI.CP_B2Check(self))
         # self.btn_display_raw.clicked.connect(lambda: handle_data.mouse_operation())
         # self.display_stdev.clicked.connect(lambda: HandleRAW_UI.display_stdev(self))
 
     def openFileEvent(self):
-        file_path = r'Y:\123\test'
-        raw_file_list = ['123.raw']
-        get_RGB_Result_list = self.handle_raw(file_path, raw_file_list)
-        print(get_RGB_Result_list)
+        # file_path = r'Y:\123\test'
+        # raw_file_list = ['123.raw']
+        # get_RGB_Result_list = self.handle_raw(file_path, raw_file_list)
+        # print(get_RGB_Result_list)
         # return 0
         self.raw_file_list = []
         self.folder_list = []
@@ -109,22 +128,18 @@ class HT_HandleRAW_UI(QMainWindow, Ui_MainWindow):
                 if os.path.join(root, dir):
                     self.folder_list.append(os.path.join(root, dir))
         folder_name_list = self.folder_list
-        print(folder_name_list)
         # sort the list with the back number
         folder_pd = pd.DataFrame([i.split('-') for i in folder_name_list])
         getlast = pd.DataFrame([i.split('\\') for i in folder_name_list])
-        re.split(['-'], getlast[0][0])
-        file_path_row = folder_pd.shape[0]
+        # print(getlast)
+        # print(getlast[0])
+        # print(getlast[0][1])
+        # re.split(['-'], getlast[0][-1])
         file_path_col = folder_pd.shape[1]
-        print(file_path_row)
-        print(file_path_col)
-        print('folder_pd:', folder_pd)
+        file_path_row = folder_pd.shape[0]
         # str(folder_pd[0][0]).split('/')
         folder_element = re.split(r'[/\\]', folder_pd[0][0])
-        print('folder_element:', folder_element)
         self.fe_folder1 = folder_element[-2]
-        print('folder_element[-2]:', folder_element[-2])
-        print(folder_pd[file_path_col-1][0])
         # # judge the data is Light Intensity(Dec), or register value(Hex)
         if folder_name_string_pattern1 in folder_pd[1][0] or folder_name_string_pattern2 in folder_pd[1][0]:
             # 0x or 0X means the variable register value
@@ -138,14 +153,10 @@ class HT_HandleRAW_UI(QMainWindow, Ui_MainWindow):
             self.labels = folder_pd[file_path_col-1].tolist()
             key_num = list(map(lambda s: s[:-1], self.labels))
             key_num = list(map(float, key_num))
-            print(key_num)
             file_dict = dict(zip(key_num, folder_name_list))
-            print(file_dict)
             file_dict = sorted(file_dict.items(), key=lambda x: x[0])
-            print(file_dict)
             folder_pd[1] = folder_pd[1].map(lambda x: str(x)[0:-1])  # delete '%'
             folder_pd[1].dtype = np.float
-            print(folder_pd[1].dtype)
             folder_pd[1] = float(folder_pd[1]).sort_values
             # folder_pd[1] = folder_pd[1].apply(lambda x: int(x, 16))  # convert Hex to Dec
             self.ticks = folder_pd[1].tolist()
@@ -182,6 +193,7 @@ class HT_HandleRAW_UI(QMainWindow, Ui_MainWindow):
     # display data with textEdit append
     def handleDisplay(self, data):
         self.textEdit.append(data)
+        self.textEdit.repaint()
         # app.processEvents()
 
     def handlePathOrFile(self):
@@ -213,7 +225,8 @@ class HT_HandleRAW_UI(QMainWindow, Ui_MainWindow):
                     raw_file_list.append(self.file_list[list_loop])
             i += 1
             self.handleDisplay(str(folder))
-            get_RGB_Result_list = self.handle_raw(folder, raw_file_list)
+            # get_RGB_Result_list = self.handle_raw(folder, raw_file_list)
+            get_RGB_Result_list = ARD.handle_raw(folder, raw_file_list)
             self.GB_median_list.append(get_RGB_Result_list[0])
             self.B_median_list.append(get_RGB_Result_list[1])
             self.R_median_list.append(get_RGB_Result_list[2])
@@ -235,6 +248,10 @@ class HT_HandleRAW_UI(QMainWindow, Ui_MainWindow):
         cols = 2672  # image column is H:2672
         channels = 1  # image channel, the gray is 1
         slice_start = 32
+        rows = int(self.V_LineE.text())
+        cols = int(self.H_LineE.text())
+        HeadBit = int(self.HB_LineE.text())
+        PixBit = int(self.PB_LineE.text())
         slice_end = rows * cols
         Frame_count = len(raw_file_list)  # frame count is the count of .raw files
         RGB_Result_list = []
@@ -245,7 +262,7 @@ class HT_HandleRAW_UI(QMainWindow, Ui_MainWindow):
             raw_file = file_path + '\\' + raw_file_list[file_loop]
             single_frame = np.fromfile(raw_file, dtype='>u2')  # big endian, u2(uint16, 2byte)
             # the ADC is 14 bits, but the raw data has been dealt, so it is not need to right shift(divide 4)
-            single_frame = np.reshape(single_frame[slice_start:], [rows, cols])  # do not need to shift the bin data, it is high zero padding
+            single_frame = np.reshape(single_frame[HeadBit:], [rows, cols])  # do not need to shift the bin data, it is high zero padding
             # choose the partial area
             choose_pixels = single_frame[(AREA[0]):(AREA[2]), (AREA[1]):(AREA[3])]
             # raw_sum is the sum of 32 frame
@@ -419,47 +436,90 @@ class HT_HandleRAW_UI(QMainWindow, Ui_MainWindow):
         # AREA = [500, 500, 1500, 1500]
         # RGB_Count_SUM = (AREA[2]-AREA[0])*(AREA[3]-AREA[1])//4
         np.set_printoptions(precision=3)
-        rows = 2064  # image row is V:2064     2064*2672 = 5515008
-        cols = 2672  # image column is H:2672
+        # rows = 2064  # image row is V:2064     2064*2672 = 5515008
+        # cols = 2672  # image column is H:2672
+        V = int(self.V_LineE.text())
+        H = int(self.H_LineE.text())
+        HeadBit = int(self.HB_LineE.text())
+        PixBit = int(self.PB_LineE.text())
         channels = 1  # image channel, the gray is 1
-        slice_start = 32
-        slice_end = rows * cols
+        slice_end = V * H
         Frame_count = 32
-        fname, ftype = QFileDialog.getOpenFileName(self, "Open File", "./")
+        if glovar.rememberPath == '':
+            glovar.rememberPath = './'
+        fname, ftype = QFileDialog.getOpenFileName(self, "Open File", str(glovar.rememberPath))
+        glovar.rememberPath = os.path.dirname(fname)
+        if not os.path.exists(fname):
+            return
         split_list = os.path.splitext(fname)
         file_name_pre = split_list[-2]
         point_file_suffix = split_list[-1]
         file_suffix = split_list[-1][1:]
-        # print(file_name_pre, file_suffix)
-        # if point_file_suffix == '.raw':
-        #     total_pixels = np.fromfile(fname, dtype='>u2')  # >u2
-        #     array_data_dec = np.reshape(total_pixels[slice_start:], [rows, cols])
-        #     glovar.display_file = array_data_dec
-        #     print(array_data_dec.dtype)
-        #     cv2.imshow('Infared image-640*512-8bit', glovar.display_file)
-        #     cv2.waitKey()
-        #     cv2.destroyAllWindows()
-        # else:
-        #     glovar.display_file = fname
-        #     print('type:', type(glovar.display_file))
-        #     g_image_original = cv2.imread(glovar.display_file)  # 原始图片，建议大于窗口宽高（800*600）
-        #     print('type:', type(g_image_original))
-        #     g_image_zoom = g_image_original.copy()
+        image_16bit = np.fromfile(fname, dtype='>u2')  # >u2:big endian, Unicode String 2 bytes
+        try:
+            image_16bit = np.reshape(image_16bit[HeadBit:], (V, H))  # 32
+        except:
+            self.handleDisplay('<font color=\"#FF0000\">---- Reshape Fail, Wrong config data!!! ----<font>')
+        min_16bit = np.min(image_16bit)
+        max_16bit = np.max(image_16bit)
+        # 如果是uint16的数据请先转成uint8。不然的话，显示会出现问题。
+        # image_8bit = np.array(np.rint((255.0 * (image_16bit - min_16bit)) / float(max_16bit - min_16bit)), dtype=np.uint8)
+        # 或者下面一种写法
+        image_8bit = np.array(np.rint(255 * ((image_16bit - min_16bit) / (max_16bit - min_16bit))), dtype=np.uint8)
         glovar.image_path = fname
-        image_8bit = handle_data.transfer_16bit_to_8bit(fname)
-        cv2.imshow('Infared image-640*512-8bit', image_8bit)
+        # image_8bit = handle_data.transfer_16bit_to_8bit(fname)
+        cv2.imshow(str(V)+'*'+str(H)+'-'+str(PixBit), image_8bit)
         cv2.waitKey()
         cv2.destroyAllWindows()
         # handle_data.mouse_operation()
-        ######numpy
-        # total_pixels = np.fromfile(r'D:\Python\Project\Ref_Data\700.raw', dtype='uint16')  #>u2
-        # array_data_dec = np.reshape(total_pixels[slice_start:], [rows, cols])
-        # cv2.imshow('Infared image-640*512-8bit', array_data_dec)
-        # # 如果是uint16的数据请先转成uint8。不然的话，显示会出现问题。
-        # cv2.waitKey()
-        # cv2.destroyAllWindows()
         print('finished')
 ##===============================================================
+
+    def save_config(self):
+        pf = open(self.raw_info, 'w+')
+        pf.write('@' + time.strftime("%Y%m%d%H%M%S", time.localtime()))
+        pf.write('\n')
+        pf.write(gip.Width + ': ' + str(self.H_LineE.text()))
+        pf.write('\n')
+        pf.write(gip.Height + ': ' + str(self.V_LineE.text()))
+        pf.write('\n')
+        pf.write(gip.Pixel_Bit + ': ' + str(self.PB_LineE.text()))
+        pf.write('\n')
+        pf.write(gip.Head_Bit + ': ' + str(self.HB_LineE.text()))
+        pf.write('\n')
+        pf.close()
+
+    def display_configData(self):
+        if os.path.exists(self.raw_info):
+            with open(self.raw_info, 'r') as pf:
+                for line in pf.readlines():
+                    if gip.Width in line:
+                        if line.split()[-1] is None:
+                            self.H_LineE.setText('None')
+                        else:
+                            self.H_LineE.setText(line.split()[-1])
+                    if gip.Height in line:
+                        if line.split()[-1] is None:
+                            self.V_LineE.setText('None')
+                        else:
+                            self.V_LineE.setText(line.split()[-1])
+                    if gip.Pixel_Bit in line:
+                        if line.split()[-1] is None:
+                            self.PB_LineE.setText('None')
+                        else:
+                            self.PB_LineE.setText(line.split()[-1])
+                    if gip.Head_Bit in line:
+                        if line.split()[-1] is None:
+                            self.HB_LineE.setText('None')
+                        else:
+                            self.HB_LineE.setText(line.split()[-1])
+        else:
+            self.handleDisplay('No Config file!')
+            return 0
+        glovar.Width = int(self.V_LineE.text())
+        glovar.Height = int(self.H_LineE.text())
+        glovar.HeadBit = int(self.HB_LineE.text())
+        glovar.PixBit = int(self.PB_LineE.text())
 
     def ttt_plot_wave(self):
         print('Plotting')
@@ -533,7 +593,7 @@ class HT_HandleRAW_UI(QMainWindow, Ui_MainWindow):
         df.loc[:, Data_name[11]] = GR_stdev_list
         df.loc[:, Data_name[12]] = GB_stdev_list
         # excel name:Data_(folder_name)_(time)
-        note_path = str(self.file_path + '/Data_' + self.fe_foleder1 + '_' + time.strftime("%Y%m%d%H%M%S", time.localtime()) + '.xlsx')
+        note_path = str(glovar.P_excel + '/Data_' + time.strftime("%Y%m%d%H%M%S", time.localtime()) + '.xlsx')
         df.to_excel(note_path)
         fig = plt.figure(figsize=(25, 20))
         ##################################################################
@@ -604,6 +664,40 @@ class HT_HandleRAW_UI(QMainWindow, Ui_MainWindow):
         print(word1, word2, os.getppid())
         for i in range(100000000):
             i += 1
+
+    def CP_2Check(self):
+        selected_file_list, fileType = QFileDialog.getOpenFileNames(self, "文件选择",
+                                                                    r"", "所有文件 (*);;文本文件 (*.txt)")
+        print(selected_file_list)
+        T2C.CompareDataWith70F_14bit(selected_file_list)
+        self.handleDisplay('Finish CompareDataWith70F')
+        self.handleDisplay(time.strftime("---> %Y%m%d%H%M%S\n", time.localtime()))
+
+    def CP_Txt2Bin(self):
+        selected_file_list, fileType = QFileDialog.getOpenFileNames(self, "文件选择",
+                                                                    r"", "所有文件 (*);;文本文件 (*.txt)")
+        print(selected_file_list)
+        T2B.Txt2Bin(selected_file_list)
+        self.handleDisplay('Finish Txt2Bin')
+        self.handleDisplay(time.strftime("---%Y%m%d%H%M%S\n", time.localtime()))
+
+    def CP_Txt2Raw(self):
+        selected_file_list, fileType = QFileDialog.getOpenFileNames(self, "文件选择",
+                                                                    r"", "所有文件 (*);;文本文件 (*.txt)")
+        print(selected_file_list)
+        self.handleDisplay('>>>Start Txt2Raw')
+        T2R.Txt2Raw(selected_file_list)
+        self.handleDisplay('>>>Finish Txt2Raw')
+        self.handleDisplay(time.strftime("---%Y%m%d%H%M%S\n", time.localtime()))
+
+    def CP_B2Check(self):
+        selected_file_list, fileType = QFileDialog.getOpenFileNames(self, "文件选择",
+                                                                    r"", "所有文件 (*);;文本文件 (*.txt)")
+        print(selected_file_list)
+        self.handleDisplay('>>>Start Bin2Check')
+        B2C.CheckBinData_14bit_160A(selected_file_list)
+        self.handleDisplay('>>>Finish Bin2Check')
+        self.handleDisplay(time.strftime("---%Y%m%d%H%M%S\n", time.localtime()))
 
 class BackendThread(QObject):
     # define signal

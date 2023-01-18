@@ -1,15 +1,21 @@
+import numpy as np
 import pandas as pd, re, os
 from collections import Counter
 from itertools import chain
 """
 # debug using
 """
-final_path = r'C:\007\PythonProject\Ref_Data\DataAnalysis\Out\final_pd.txt'
+# final_path = r'D:\Python\Project\Ref_Data\out\text\final_pd.txt'
 t = 0
 s = 0
 """
 The global variable
 """
+final_path = ''
+P_image = ''
+P_file = ''
+P_html = ''
+P_excel = ''
 # NO,Site,Result,TestName,Signal,Measure,LowLimit,HighLimit,Force,CheckStatus
 selected_file_list = ()  # the been selected file list
 # selected_file_list = [r'D:\Python\Project\DataAnalysis\0001_FAIL_datalog_20220402170730.txt']
@@ -19,7 +25,7 @@ tree_checked = {}
 title_pd_dict = {}
 log_row = 0
 log_col = 0
-output_file_path = r'C:\007\PythonProject\Ref_Data\DataAnalysis\Out'
+output_file_path = r'D:\Python\Project\Ref_Data\out\excel'
 file_count = 0
 test_count = 0
 shift_count = 0
@@ -32,6 +38,7 @@ WaveForm_pd = pd.DataFrame()
 # SA result
 R_yield = 0
 File_NO = []
+File_Info = []
 DUT_Val = []
 Chip_List = []
 DUT_math = {}  # Average , Median, Variance, Standard deviation, Max, Min
@@ -42,6 +49,8 @@ DUT_math = {}  # Average , Median, Variance, Standard deviation, Max, Min
 # unit:nV, uV, mV, V, nA, uA, mA, A, M, MHZ, K, KHZ, R
 all_units = ['nV', 'uV', 'mV', 'V', 'nA', 'uA', 'mA', 'A', 'HZ', 'M', 'MHZ', 'K', 'KHZ', 'R']
 pat_unit = re.compile(r'(NO Site(\s+)Result(\s+)TestName)', re.I)
+pat_Item_PASS = re.compile(r'^(\d{0,9})(\s+)(\d{0,9})(\s+)PASS(\s+)')
+pat_Item_FAIL = re.compile(r'^(\d{0,9})(\s+)(\d{0,9})(\s+)FAIL(\s+)')
 plot_fmt_color = ['b', 'r', 'c', 'm', 'g', 'y', 'k', 'tan', 'gold', 'grey', 'peru']
 error_message = ''
 Chart_Success = False
@@ -55,6 +64,10 @@ Sub_Process_list = []
 Process_PPID_list = []
 Process_Dict = {}
 Math_dict = {}
+Log_FT = False
+Log_CP = False
+Log_Wafer = False
+Log_Debug = False
 """
 global class---dataframe title
 """
@@ -141,17 +154,23 @@ class global_table_str:
         self.Separation = str()
         self.Combination = str()
 
+        self.Log_Debug = str()
+        self.Log_Wafer = str()
+        self.Log_FT = str()
+        self.Log_CP = str()
+
         self.setValue('None', 'Histogram', 'CurveChart', 'NormalDistribution', 'ScatterDiagram', 'LineChart', 'BoxPlots',
                       'Chart_Html',
                       'VP',
-                      'Separation',
-                      'Combination'
+                      'Separation', 'Combination',
+                      'Debug', 'Wafer', 'FT', 'CP'
                       )
 
     def setValue(self, none, Histogram, Curve_chart, Normal_distribution, Scatter_diagram, Line_chart, Box_Plots,
                  Chart_Html,
                  VP,
-                 Separation, Combination):
+                 Separation, Combination,
+                 Log_Debug, Log_Wafer, Log_FT, Log_CP):
         self.none = none
         self.Histogram = Histogram
         self.Curve_chart = Curve_chart
@@ -166,6 +185,11 @@ class global_table_str:
 
         self.Separation = Separation
         self.Combination = Combination
+
+        self.Log_Debug = Log_Debug
+        self.Log_Wafer = Log_Wafer
+        self.Log_FT = Log_FT
+        self.Log_CP = Log_CP
 
 # Average , Median, Variance, Standard deviation, Max, Min
 class global_math:
@@ -241,9 +265,9 @@ def extractUnit7UnifyValue(data_l):
         unit_class[d] = data_l[d][-1]
         digital_l[d] = data_l[d][0:(len(data_l[d])-len(unit_l[d]))]
     if len(set(unit_class)) != 1 and '0' not in unit_class:
-        error_message = 'The units are different, so it cannot be counted!!!'
+        err_message = 'The units are different, so it cannot be counted!!!'
         error_flag = True
-        print(error_message)
+        print(err_message)
         unit = glv_gss.NaN
         return final_res, error_flag, unit
     else:
@@ -265,6 +289,7 @@ def extractUnit7UnifyValue(data_l):
         # all units are different, Unify the Value
         result = Counter(unit_l)  # Number of unit occurrences
         res = max(result, key=lambda x: result[x])  # find the max number of unit base on the last result
+        unit = res
         if 'm' in res:
             for d in range(len(data_l)):
                 unit_l[d] = ''.join(re.findall(r'[A-Za-z]', data_l[d]))
@@ -330,7 +355,11 @@ def extractUnit7UnifyValue(data_l):
                     final_res[d] = digital_l[d] / 1e9
                 elif 'p' in unit_l[d]:
                     final_res[d] = digital_l[d] / 1e12
-
+    list_cnt = 0
+    for ele in final_res:  # if the value is NaN or nan, original is 0, convert to 0
+        if str(ele) == 'NaN' or str(ele) == 'nan':
+            final_res[list_cnt] = 0
+        list_cnt += 1
     return final_res, error_flag, unit
 
 
@@ -345,17 +374,25 @@ def List_OneD2TwoD(data_l, len_l):
 
 
 def extractDataFromFileName(file_list):
-    # file_list = ['C:/007/PythonProject/Ref_Data/10125AE/002_FAIL_datalog.txt',
-    #              'C:/007/PythonProject/Ref_Data/10125AE/003_FAIL_datalog.txt',
-    #              'C:/007/PythonProject/Ref_Data/10125AE/004_FAIL_datalog.txt']
+    File_Info = ['-']*len(file_list)
+    cnt = 0
+    File_NO = []
     for file in file_list:
+        if '.txt' in file:
+            file = file.replace('.txt', '', 1)
         pathMixName = file.split('/')  # 将fn按照/切分
         pathx = "/".join(pathMixName[0:len(pathMixName) - 1])  # 假设切分后有n部分，将前n-1部分用/重新拼接，就是文件的路径
         dut_list = pathMixName[len(pathMixName) - 1].split('_')  # 最后一个就是文件名，并且按照'_'拆分
         # 提取数字作为DUT NO. 并且删除前导零
         res = [ele.lstrip('0') for ele in dut_list]
-        File_NO.append('#' + res[0])
-    return File_NO
+        if len(res) > 1:
+            File_Info[cnt] = res[1]
+        if '#' in res[0]:
+            File_NO.append(res[0])
+        else:
+            File_NO.append('#' + res[0])
+        cnt += 1
+    return File_NO, File_Info
 
 
 def extractFileName(file_list):
@@ -378,8 +415,36 @@ def extractFileName(file_list):
         ChipID = [ele.lstrip('0') for ele in file_info]
     return file_name, ChipID[0]
 
-
-
+def creatFolder(path,f_folder1,s_folder1,s_folder2,s_folder3,s_folder4):
+    f_pf1 = path + '\\' + f_folder1
+    s_pf1 = f_pf1 + '\\' + s_folder1
+    s_pf2 = f_pf1 + '\\' + s_folder2
+    s_pf3 = f_pf1 + '\\' + s_folder3
+    s_pf4 = f_pf1 + '\\' + s_folder4
+    if os.path.exists(f_pf1):
+        if os.path.exists(s_pf1):
+            print(s_folder1+' has existed')
+        else:
+            os.makedirs(s_pf1)
+        if os.path.exists(s_pf2):
+            print(s_folder2+' has existed')
+        else:
+            os.makedirs(s_pf2)
+        if os.path.exists(s_pf3):
+            print(s_folder3+' has existed')
+        else:
+            os.makedirs(s_pf3)
+        if os.path.exists(s_pf4):
+            print(s_folder4+' has existed')
+        else:
+            os.makedirs(s_pf4)
+    else:
+        os.makedirs(f_pf1)
+        os.makedirs(s_pf1)
+        os.makedirs(s_pf2)
+        os.makedirs(s_pf3)
+        os.makedirs(s_pf4)
+    return s_pf1, s_pf2, s_pf3, s_pf4
 
 # if __name__ == '__main__':
 #     extractInfoFromFileName()

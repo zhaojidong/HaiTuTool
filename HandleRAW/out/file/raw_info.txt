@@ -1,0 +1,5 @@
+@20220805143047
+Width: 2672
+Height: 2064
+Pixel_Bit: 14
+Head_Bit: 32
